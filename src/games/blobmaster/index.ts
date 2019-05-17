@@ -449,7 +449,13 @@ export const Namespace = makeNamespace({
                 maxSlimeSpawnedOnTile: {
                     typeName: "int",
                 },
+                maxStartingWalls: {
+                    typeName: "int",
+                },
                 maxTurns: {
+                    typeName: "int",
+                },
+                minStartingWalls: {
                     typeName: "int",
                 },
                 perTileDropDelay: {

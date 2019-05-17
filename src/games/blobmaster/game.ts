@@ -113,9 +113,19 @@ export class BlobmasterGame extends BaseClasses.Game {
     public readonly maxSlimeSpawnedOnTile!: number;
 
     /**
+     * The maximum number of walls spawned at the start of the match.
+     */
+    public readonly maxStartingWalls!: number;
+
+    /**
      * The maximum number of turns before the game will automatically end.
      */
     public readonly maxTurns!: number;
+
+    /**
+     * The minimum number of walls spawned at the start of the match.
+     */
+    public readonly minStartingWalls!: number;
 
     /**
      * It takes the ceiling of this many turns times the number tiles away from
@@ -196,27 +206,9 @@ export class BlobmasterGame extends BaseClasses.Game {
         // <<-- Creer-Merge: constructor -->>
         // setup any thing you need here
 
-        const blobmaster1 = this.manager.create.blob({
-            owner: this.players[0],
-            tile: this.getTile(0, 0) as Tile,
-            size: 1,
-            isBlobmaster: true,
-        });
-        this.players[0].blobmaster = blobmaster1;
-        this.blobmasters.push(blobmaster1);
-
-        const blobmaster2 = this.manager.create.blob({
-            owner: this.players[1],
-            tile: this.getTile(this.mapWidth - 1, this.mapHeight - 1) as Tile,
-            size: 1,
-            isBlobmaster: true,
-        });
-        this.players[1].blobmaster = blobmaster2;
-        this.blobmasters.push(blobmaster2);
-
-        for (const tile of this.tiles) {
-            tile.slime = this.maxSlimeSpawnedOnTile;
-        }
+        this.spawnBlobmasters();
+        this.spawnWalls();
+        this.spawnSlime();
 
         this.newBlobs = [] as Blob[];
 
@@ -246,6 +238,74 @@ export class BlobmasterGame extends BaseClasses.Game {
     // <<-- Creer-Merge: protected-private-functions -->>
 
     // Any additional protected or pirate methods can go here.
+
+    private spawnBlobmasters(): void {
+        const blobmaster1y = this.manager.random.int(0, this.mapHeight - 1);
+        const blobmaster2y = this.mapHeight - blobmaster1y - 1;
+        const blobmaster1 = this.manager.create.blob({
+            owner: this.players[0],
+            tile: this.getTile(0, blobmaster1y) as Tile,
+            size: 1,
+            isBlobmaster: true,
+        });
+        this.players[0].blobmaster = blobmaster1;
+        this.blobmasters.push(blobmaster1);
+        const blobmaster2 = this.manager.create.blob({
+            owner: this.players[1],
+            tile: this.getTile(this.mapWidth - 1, blobmaster2y) as Tile,
+            size: 1,
+            isBlobmaster: true,
+        });
+        this.players[1].blobmaster = blobmaster2;
+        this.blobmasters.push(blobmaster2);
+    }
+
+    private spawnWalls(): void {
+        const numWalls = this.manager.random.int(this.minStartingWalls / 2, this.maxStartingWalls / 2);
+        for (let i = 0; i < numWalls; i += 1) {
+            const x = this.manager.random.int(2, this.mapWidth / 2 - 1);
+            const y = this.manager.random.int(0, this.mapHeight - 1);
+            const reflectedX = this.mapWidth - x - 1;
+            const reflectedY = this.mapHeight - y - 1;
+            const chosen = this.getTile(x, y) as Tile;
+            const reflectedChosen = this.getTile(reflectedX, reflectedY) as Tile;
+            if (chosen.blob !== undefined || reflectedChosen.blob !== undefined) {
+                i -= 1;
+                continue;
+            }
+            const wall = this.manager.create.blob({
+                owner: undefined,
+                tile: chosen,
+                size: 1,
+                isBlobmaster: false,
+            });
+            const reflectedWall = this.manager.create.blob({
+                owner: undefined,
+                tile: reflectedChosen,
+                size: 1,
+                isBlobmaster: false,
+            });
+            while (this.manager.random.int(0, 100) < 50) {
+                const newSize = wall.size + 2;
+                if (wall.canResize(newSize) && reflectedWall.canResize(newSize)) {
+                    wall.resize(newSize);
+                    reflectedWall.resize(newSize);
+                } else {
+                    break;
+                }
+            }
+            wall.turnsTillDead = this.maxTurns;
+            reflectedWall.turnsTillDead = this.maxTurns;
+            this.blobs.push(wall);
+            this.blobs.push(reflectedWall);
+        }
+    }
+
+    private spawnSlime(): void {
+        for (const tile of this.tiles) {
+            tile.slime = this.maxSlimeSpawnedOnTile;
+        }
+    }
 
     // <<-- /Creer-Merge: protected-private-functions -->>
 }

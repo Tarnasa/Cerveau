@@ -103,6 +103,20 @@ export class BlobmasterGameSettingsManager extends BaseClasses.GameSettings {
                 // 12.8 * 10 = 120 per turn optimal if players balanced
                 // <<-- /Creer-Merge: maxSlimeSpawnedOnTile -->>
             },
+            maxStartingWalls: {
+                description: "The maximum number of walls spawned at the start "
+                           + "of the match.",
+                // <<-- Creer-Merge: maxStartingWalls -->>
+                default: 24,
+                // <<-- /Creer-Merge: maxStartingWalls -->>
+            },
+            minStartingWalls: {
+                description: "The minimum number of walls spawned at the start "
+                           + "of the match.",
+                // <<-- Creer-Merge: minStartingWalls -->>
+                default: 8,
+                // <<-- /Creer-Merge: minStartingWalls -->>
+            },
             perTileDropDelay: {
                 description: "It takes the ceiling of this many turns times "
                            + "the number tiles away from your blobmaster to "

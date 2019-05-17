@@ -79,7 +79,7 @@ export class Blob extends GameObject {
         args: Readonly<IBlobProperties & {
             // <<-- Creer-Merge: constructor-args -->>
             // You can add more constructor args in here
-            owner: Player,
+            owner: Player | undefined,
             tile: Tile,
             size: number,
             isBlobmaster: boolean,
