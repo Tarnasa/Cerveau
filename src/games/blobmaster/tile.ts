@@ -91,6 +91,7 @@ export class Tile extends GameObject implements BaseTile {
 
         // <<-- Creer-Merge: constructor -->>
         // setup any thing you need here
+        this.dropTurnsLeft = -1;
         // <<-- /Creer-Merge: constructor -->>
     }
 
