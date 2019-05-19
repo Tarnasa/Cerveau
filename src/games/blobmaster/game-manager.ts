@@ -7,6 +7,7 @@ import { BaseClasses, BlobmasterGame, BlobmasterGameObjectFactory } from "./";
 import { filterInPlace } from "~/utils";
 import { Blob } from "./blob";
 import { Tile } from "./tile";
+import { Player } from "./player";
 // import { logger } from "~/core/logger";
 // <<-- /Creer-Merge: imports -->>
 
@@ -108,10 +109,10 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
         const scoreWinner = this.checkScore();
         const tilesWinner = this.checkTilesCovered();
         if (scoreWinner === 0 || scoreWinner === 1) {
-            this.declareWinner(`Reached ${this.game.pointsToWin} points`, this.game.players[scoreWinner]);
+            this.declareWinnerAndLoser(`Reached ${this.game.pointsToWin} points`, this.game.players[scoreWinner]);
             return true;
         } else if (tilesWinner === 0 || tilesWinner === 1) {
-            this.declareWinner(`Covered ${this.game.tilesCoveredToWin} tiles`, this.game.players[tilesWinner]);
+            this.declareWinnerAndLoser(`Covered ${this.game.tilesCoveredToWin} tiles`, this.game.players[tilesWinner]);
             return true;
         } else if (scoreWinner === 2 && tilesWinner === 2) {
             // Ummmmmmm
@@ -136,19 +137,27 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
         const p1 = this.game.players[0];
         const p2 = this.game.players[1];
         if (p1.score > p2.score) {
-            this.declareWinner(
+            this.declareWinnerAndLoser(
                 `Has higher score (${p1.score} vs ${p2.score}) at the end of ${this.game.maxTurns} turns`, p1);
         } else if (p2.score > p1.score) {
-            this.declareWinner(
+            this.declareWinnerAndLoser(
                 `Has higher score (${p2.score} vs ${p1.score}) at the end of ${this.game.maxTurns} turns`, p2);
         } else if (p1.blobs.length > p2.blobs.length) {
-            this.declareWinner(
+            this.declareWinnerAndLoser(
                 `Has equal score (${p1.score}), but more blobs (${p1.blobs.length} vs ` +
                 `${p2.blobs.length}) at the end of ${this.game.maxTurns} turns`, p1);
         } else if (p2.blobs.length > p1.blobs.length) {
-            this.declareWinner(
+            this.declareWinnerAndLoser(
                 `Has equal score (${p2.score}), but more blobs (${p2.blobs.length} vs ` +
                 `${p1.blobs.length}) at the end of ${this.game.maxTurns} turns`, p2);
+        } else if (p1.slime > p2.slime) {
+            this.declareWinnerAndLoser(
+                `Has equal score (${p1.score}), equal blobs (${p1.blobs.length}, but ` +
+                `more slime (${p1.slime} vs ${p2.slime}) at the end of ${this.game.maxTurns} turns`, p1);
+        } else if (p2.slime > p1.slime) {
+            this.declareWinnerAndLoser(
+                `Has equal score (${p2.score}), equal blobs (${p2.blobs.length}, but ` +
+                `more slime (${p2.slime} vs ${p1.slime}) at the end of ${this.game.maxTurns} turns`, p2);
         }
         // <<-- /Creer-Merge: secondary-win-conditions -->>
 
@@ -240,6 +249,12 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
     }
 
     // any additional protected/private methods you need can be added here
+
+    private declareWinnerAndLoser(reason: string, winner: Player): void {
+        this.declareWinner(reason, winner);
+        const loseReason = 'Opponent ' + reason[0].toLowerCase() + reason.slice(1);
+        this.declareLoser(loseReason, winner.opponent);
+    }
 
     // <<-- /Creer-Merge: protected-private-methods -->>
 }
