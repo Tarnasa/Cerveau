@@ -6,8 +6,8 @@ import { BaseClasses, BlobmasterGame, BlobmasterGameObjectFactory } from "./";
 // any additional imports you want can be placed here safely between creer runs
 import { filterInPlace } from "~/utils";
 import { Blob } from "./blob";
-import { Tile } from "./tile";
 import { Player } from "./player";
+import { Tile } from "./tile";
 // import { logger } from "~/core/logger";
 // <<-- /Creer-Merge: imports -->>
 
@@ -252,7 +252,7 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
 
     private declareWinnerAndLoser(reason: string, winner: Player): void {
         this.declareWinner(reason, winner);
-        const loseReason = 'Opponent ' + reason[0].toLowerCase() + reason.slice(1);
+        const loseReason = `Opponent ${reason[0].toLowerCase() + reason.slice(1)}`;
         this.declareLoser(loseReason, winner.opponent);
     }
 
