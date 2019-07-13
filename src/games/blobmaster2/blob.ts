@@ -174,7 +174,29 @@ export class Blob extends GameObject {
         }
     }
 
+    /* getMoveDirection returns east|north|west|south or undefined depending on
+     * the relation of the provided tile and the tiles which the calling object
+     * currently occupies.
+     *
+     * For simple 1x1 blobs, this function will return
+     * 'east' if `tile` is this.tile.tile_east.
+     *
+     * For a 3x3 blob the function will return direction as shown below:
+     *   N_N_N
+     * W|  E  |E
+     * W|S    |E
+     * W|_____|E
+     *   S S S
+     * ( Where an empty space returns undefined )
+     */
     public getMoveDirection(tile: Tile): string | undefined {
+        if (this.tile === undefined) {
+            return undefined;
+        }
+        const simpleDirection = this.tile.getAdjacentDirection(tile);
+        if (simpleDirection) {
+            return simpleDirection;
+        }
         let direction: string | undefined;
         for (const blobTile of this.tiles) {
             const maybeDirection = blobTile.getAdjacentDirection(tile);
