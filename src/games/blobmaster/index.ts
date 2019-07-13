@@ -79,12 +79,12 @@ export interface IBlobProperties {
     dropsLeft?: number;
 
     /**
-     * If this Blob is a Blobmaster.
+     * Whether this Blob is a Blobmaster.
      */
     isBlobmaster?: boolean;
 
     /**
-     * If this Blob is dead and has been removed from the game.
+     * Whether this Blob is dead and has been removed from the game.
      */
     isDead?: boolean;
 

@@ -20,12 +20,12 @@ export class Blob extends GameObject {
     public dropsLeft!: number;
 
     /**
-     * If this Blob is a Blobmaster.
+     * Whether this Blob is a Blobmaster.
      */
     public isBlobmaster!: boolean;
 
     /**
-     * If this Blob is dead and has been removed from the game.
+     * Whether this Blob is dead and has been removed from the game.
      */
     public isDead!: boolean;
 
