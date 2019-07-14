@@ -1,12 +1,14 @@
 import { IBaseGameObjectRequiredData } from "~/core/game";
-import { IBaseBlobmasterPlayer } from "./";
+import { IBaseBlobmasterPlayer, IPlayerDropArgs } from "./";
 import { AI } from "./ai";
 import { Blob } from "./blob";
 import { GameObject } from "./game-object";
+import { Player } from "./player";
 import { Tile } from "./tile";
 
 // <<-- Creer-Merge: imports -->>
 // any additional imports you want can be placed here safely between creer runs
+import { logger } from "~/core/logger";
 // <<-- /Creer-Merge: imports -->>
 
 /**
@@ -37,6 +39,11 @@ export class Player extends GameObject implements IBaseBlobmasterPlayer {
      * which simultaneous drops are handled.
      */
     public drops!: Tile[];
+
+    /**
+     * How many more Blobs this Player can drop this turn.
+     */
+    public dropsLeft!: number;
 
     /**
      * If the player lost the game or not.
@@ -108,6 +115,7 @@ export class Player extends GameObject implements IBaseBlobmasterPlayer {
         // setup any thing you need here
         this.slime = 0;
         this.score = 0;
+        this.dropsLeft = this.game.maxDropsPerTurn;
         // <<-- /Creer-Merge: constructor -->>
     }
 
@@ -126,23 +134,15 @@ export class Player extends GameObject implements IBaseBlobmasterPlayer {
         }
     }
 
-    public takeAwayBlobUpkeep(): void {
-        for (const blob of this.blobs) {
-            if (!blob.isDead && blob.owner) {
-                this.slime -= this.game.blobUpkeep;
-            }
-        }
-    }
-
     public captureEnemyBlobs(): void {
         for (const enemy of this.opponent.blobs) {
-            if (!enemy.isDead && enemy.tile !== undefined && !enemy.isBlobmaster) {
+            if (!enemy.isDead && enemy.tile !== undefined && !enemy.isBlobmaster && enemy.size === 1) {
                 let attackers = 0;
                 for (const neighbor of enemy.tile.getNeighbors()) {
                     if (neighbor.blob &&
                         !neighbor.blob.isBlobmaster &&
                         neighbor.blob.owner === this &&
-                        neighbor.blob.size === enemy.size){
+                        neighbor.blob.size === 1) {
                         attackers += 1;
                     }
                 }
@@ -165,7 +165,89 @@ export class Player extends GameObject implements IBaseBlobmasterPlayer {
         }
     }
 
+    public blobCost(): number {
+        const numBlobs = (this.blobs.length + this.drops.length);
+        return Math.floor(this.game.blobCostMultiplier * Math.pow(numBlobs, this.game.blobCostExponent));
+    }
+
     // <<-- /Creer-Merge: public-functions -->>
+
+    /**
+     * Invalidation function for drop. Try to find a reason why the passed in
+     * parameters are invalid, and return a human readable string telling them
+     * why it is invalid.
+     *
+     * @param player - The player that called this.
+     * @param tile - The Tile to spawn a Blob on.
+     * @returns If the arguments are invalid, return a string explaining to
+     * human players why it is invalid. If it is valid return nothing, or an
+     * object with new arguments to use in the actual function.
+     */
+    protected invalidateDrop(
+        player: Player,
+        tile: Tile,
+    ): void | string | IPlayerDropArgs {
+        // <<-- Creer-Merge: invalidate-drop -->>
+
+        // Check all the arguments for drop here and try to
+        // return a string explaining why the input is wrong.
+        // If you need to change an argument for the real function, then
+        // changing its value in this scope is enough.
+
+        if (player !== this.game.currentPlayer) {
+            return `It is not your turn, ${player}.`;
+        }
+        if (player !== this) {
+            return `You cannot tell your opponent to drop()`;
+        }
+        if (!tile) {
+            return `No tile provided to drop on.`;
+        }
+        if (this.slime < this.blobCost()) {
+            return `You do not have enough slime (${this.slime} vs ${this.blobCost()}) to drop a blob`;
+        }
+        if (tile.dropOwner) {
+            return `A blob is already being dropped onto ${tile}`;
+        }
+        if (this.dropsLeft <= 0) {
+            return `${this} does not have any drops left this turn.`;
+        }
+
+        // <<-- /Creer-Merge: invalidate-drop -->>
+    }
+
+    /**
+     * Spawns a Blob in the air above the given tile.
+     *
+     * @param player - The player that called this.
+     * @param tile - The Tile to spawn a Blob on.
+     * @returns True if the drop worked, false otherwise.
+     */
+    protected async drop(player: Player, tile: Tile): Promise<boolean> {
+        // <<-- Creer-Merge: drop -->>
+
+        // Add logic here for drop.
+
+        tile.dropOwner = player;
+        if (this.blobmaster === undefined) {
+            logger.error(`${this} has no blobmaster!`);
+            return false;
+        }
+        const blobmaster = this.blobmaster;
+        if (blobmaster.tile === undefined) {
+            logger.error(`${this}'s blobmaster ${blobmaster} tile was undefined!`);
+            return false;
+        }
+        const xd = Math.abs(tile.x - blobmaster.tile.x);
+        const yd = Math.abs(tile.y - blobmaster.tile.y);
+        tile.dropTurnsLeft = Math.ceil((xd + yd) * this.game.perTileDropDelay);
+        player.slime -= this.blobCost();
+        player.drops.push(tile);
+        this.dropsLeft -= 1;
+        return true;
+
+        // <<-- /Creer-Merge: drop -->>
+    }
 
     // <<-- Creer-Merge: protected-private-functions -->>
 

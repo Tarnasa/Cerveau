@@ -12,7 +12,8 @@ import { Tile } from "./tile";
 // <<-- /Creer-Merge: imports -->>
 
 /**
- * Collect slime and cover the battlefield with dropped blobs to win.
+ * Move around to collect slime and cover the battlefield with ever-bigger
+ * blobs to win.
  */
 export class BlobmasterGame extends BaseClasses.Game {
     /** The manager of this game, that controls everything around it */
@@ -27,14 +28,14 @@ export class BlobmasterGame extends BaseClasses.Game {
     public readonly bigBlobSpeed!: number;
 
     /**
-     * How much slime it costs to spawn a blob.
+     * The E in the blob cost formula Mx**E.
      */
-    public readonly blobCost!: number;
+    public readonly blobCostExponent!: number;
 
     /**
-     * Every blob costs its owner this amount of slime every turn.
+     * The M in the blob cost formula Mx**E.
      */
-    public readonly blobUpkeep!: number;
+    public readonly blobCostMultiplier!: number;
 
     /**
      * Every Blobmaster in the game.
@@ -64,7 +65,7 @@ export class BlobmasterGame extends BaseClasses.Game {
     public currentTurn!: number;
 
     /**
-     * The amount of slime added to a blob or wall's tiles when it dies.
+     * The amount of slime added to a blob's tiles when it dies.
      */
     public readonly deathSlime!: number;
 
@@ -74,17 +75,6 @@ export class BlobmasterGame extends BaseClasses.Game {
      * ID.
      */
     public gameObjects!: {[id: string]: GameObject};
-
-    /**
-     * The amount of slime given back to a blob's owner when it turns into a
-     * wall.
-     */
-    public readonly hardenReward!: number;
-
-    /**
-     * The number of turns it takes a blob to harden into a wall.
-     */
-    public readonly hardenTime!: number;
 
     /**
      * The number of Tiles in the map along the y (vertical) axis.
@@ -97,7 +87,7 @@ export class BlobmasterGame extends BaseClasses.Game {
     public readonly mapWidth!: number;
 
     /**
-     * A Blobmaster can drop at most this many blobs per turn.
+     * A Player can drop at most this many blobs per turn.
      */
     public readonly maxDropsPerTurn!: number;
 
@@ -113,7 +103,7 @@ export class BlobmasterGame extends BaseClasses.Game {
     public readonly maxSlimeSpawnedOnTile!: number;
 
     /**
-     * The maximum number of walls spawned at the start of the match.
+     * The maximum number of neutral blobs spawned at the start of the match.
      */
     public readonly maxStartingWalls!: number;
 
@@ -123,7 +113,7 @@ export class BlobmasterGame extends BaseClasses.Game {
     public readonly maxTurns!: number;
 
     /**
-     * The minimum number of walls spawned at the start of the match.
+     * The minimum number of neutral blobs spawned at the start of the match.
      */
     public readonly minStartingWalls!: number;
 
@@ -175,11 +165,6 @@ export class BlobmasterGame extends BaseClasses.Game {
      * turn.
      */
     public readonly timeAddedPerTurn!: number;
-
-    /**
-     * The number of turns a hardened blob wall lasts.
-     */
-    public readonly wallLifespan!: number;
 
     // <<-- Creer-Merge: attributes -->>
 
@@ -241,7 +226,7 @@ export class BlobmasterGame extends BaseClasses.Game {
 
     private spawnBlobmasters(): void {
         const blobmaster1y = this.manager.random.int(0, this.mapHeight - 1);
-        const blobmaster2y = this.mapHeight - blobmaster1y - 1;
+        const Blobmastery = this.mapHeight - blobmaster1y - 1;
         const blobmaster1 = this.manager.create.blob({
             owner: this.players[0],
             tile: this.getTile(0, blobmaster1y) as Tile,
@@ -250,14 +235,14 @@ export class BlobmasterGame extends BaseClasses.Game {
         });
         this.players[0].blobmaster = blobmaster1;
         this.blobmasters.push(blobmaster1);
-        const blobmaster2 = this.manager.create.blob({
+        const Blobmaster = this.manager.create.blob({
             owner: this.players[1],
-            tile: this.getTile(this.mapWidth - 1, blobmaster2y) as Tile,
+            tile: this.getTile(this.mapWidth - 1, Blobmastery) as Tile,
             size: 1,
             isBlobmaster: true,
         });
-        this.players[1].blobmaster = blobmaster2;
-        this.blobmasters.push(blobmaster2);
+        this.players[1].blobmaster = Blobmaster;
+        this.blobmasters.push(Blobmaster);
     }
 
     private spawnWalls(): void {
@@ -294,8 +279,6 @@ export class BlobmasterGame extends BaseClasses.Game {
                     break;
                 }
             }
-            wall.turnsTillDead = this.maxTurns;
-            reflectedWall.turnsTillDead = this.maxTurns;
             this.blobs.push(wall);
             this.blobs.push(reflectedWall);
         }

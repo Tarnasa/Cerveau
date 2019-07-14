@@ -1,24 +1,17 @@
 import { IBaseGameObjectRequiredData } from "~/core/game";
-import { IBlobDropArgs, IBlobHardenArgs, IBlobMoveArgs, IBlobProperties,
-       } from "./";
+import { IBlobMoveArgs, IBlobProperties } from "./";
 import { GameObject } from "./game-object";
 import { Player } from "./player";
 import { Tile } from "./tile";
 
 // <<-- Creer-Merge: imports -->>
 // any additional imports you want can be placed here safely between creer runs
-import { logger } from "~/core/logger";
 // <<-- /Creer-Merge: imports -->>
 
 /**
  * A Blob.  Can move and collect slime.
  */
 export class Blob extends GameObject {
-    /**
-     * How many more Blobs this Blobmaster can spawn this turn.
-     */
-    public dropsLeft!: number;
-
     /**
      * Whether this Blob is a Blobmaster.
      */
@@ -36,7 +29,7 @@ export class Blob extends GameObject {
 
     /**
      * The Player that owns and can control this Blob, or undefined if this is
-     * a wall.
+     * a neutral blob.
      */
     public owner?: Player;
 
@@ -49,16 +42,6 @@ export class Blob extends GameObject {
      * The top-left (smallest x,y) Tile that this Blob occupies.
      */
     public tile?: Tile;
-
-    /**
-     * How many more turns till this wall disappears, or negative.
-     */
-    public turnsTillDead!: number;
-
-    /**
-     * How many more turns till this blob becomes a wall, or negative.
-     */
-    public turnsTillHardened!: number;
 
     // <<-- Creer-Merge: attributes -->>
 
@@ -106,8 +89,6 @@ export class Blob extends GameObject {
             }
         }
         this.isDead = false;
-        this.turnsTillHardened = -1;
-        this.turnsTillDead = -1;
         // <<-- /Creer-Merge: constructor -->>
     }
 
@@ -124,24 +105,6 @@ export class Blob extends GameObject {
             } else {
                 this.movesLeft = this.game.bigBlobSpeed;
             }
-            if (this.isBlobmaster) {
-                this.dropsLeft = this.game.maxDropsPerTurn;
-            }
-        }
-    }
-
-    public handleHardenAndWallDeath(): void {
-        if (this.owner !== undefined && this.turnsTillHardened === 0) {
-            this.turnsTillHardened = -1;
-            this.owner.slime += this.game.hardenReward;
-            this.owner = undefined;
-            this.turnsTillDead = this.game.wallLifespan;
-        } else if (this.turnsTillHardened > 0) {
-            this.turnsTillHardened -= 1;
-        } else if (this.turnsTillDead === 0) {
-            this.applyDamage(1);
-        } else if (this.turnsTillDead > 0) {
-            this.turnsTillDead -= 1;
         }
     }
 
@@ -173,7 +136,10 @@ export class Blob extends GameObject {
                 if (!occupiedTile) {
                     return false;
                 } else if (occupiedTile.blob && occupiedTile.blob !== this) {
-                    return false;
+                    const blob = occupiedTile.blob;
+                    if (blob.isBlobmaster || blob.owner !== this.owner) {
+                        return false;
+                    }
                 }
             }
         }
@@ -199,13 +165,38 @@ export class Blob extends GameObject {
                 const occupiedTile = this.game.getTile(
                     this.tile.x + x,
                     this.tile.y + y) as Tile;
+                if (occupiedTile.blob) {
+                    occupiedTile.blob.applyDamage(999);
+                }
                 this.tiles.push(occupiedTile);
                 occupiedTile.blob = this;
             }
         }
     }
 
+    /* getMoveDirection returns east|north|west|south or undefined depending on
+     * the relation of the provided tile and the tiles which the calling object
+     * currently occupies.
+     *
+     * For simple 1x1 blobs, this function will return
+     * 'east' if `tile` is this.tile.tile_east.
+     *
+     * For a 3x3 blob the function will return direction as shown below:
+     *   N_N_N
+     * W|  E  |E
+     * W|S    |E
+     * W|_____|E
+     *   S S S
+     * ( Where an empty space returns undefined )
+     */
     public getMoveDirection(tile: Tile): string | undefined {
+        if (this.tile === undefined) {
+            return undefined;
+        }
+        const simpleDirection = this.tile.getAdjacentDirection(tile);
+        if (simpleDirection) {
+            return simpleDirection;
+        }
         let direction: string | undefined;
         for (const blobTile of this.tiles) {
             const maybeDirection = blobTile.getAdjacentDirection(tile);
@@ -227,7 +218,7 @@ export class Blob extends GameObject {
         this.isDead = true;
         for (const tile of this.tiles) {
             tile.blob = undefined;
-            tile.slime += this.game.deathSlime;  // Even walls spawn slime
+            tile.slime += this.game.deathSlime;
         }
         this.tiles.length = 0;
         this.tile = undefined;
@@ -235,127 +226,6 @@ export class Blob extends GameObject {
     }
 
     // <<-- /Creer-Merge: public-functions -->>
-
-    /**
-     * Invalidation function for drop. Try to find a reason why the passed in
-     * parameters are invalid, and return a human readable string telling them
-     * why it is invalid.
-     *
-     * @param player - The player that called this.
-     * @param tile - The Tile to spawn a Blob on.
-     * @returns If the arguments are invalid, return a string explaining to
-     * human players why it is invalid. If it is valid return nothing, or an
-     * object with new arguments to use in the actual function.
-     */
-    protected invalidateDrop(
-        player: Player,
-        tile: Tile,
-    ): void | string | IBlobDropArgs {
-        // <<-- Creer-Merge: invalidate-drop -->>
-
-        // Check all the arguments for drop here and try to
-        // return a string explaining why the input is wrong.
-        // If you need to change an argument for the real function, then
-        // changing its value in this scope is enough.
-
-        const reason = this.invalidate(player);
-        if (reason) {
-            return reason;
-        }
-        if (!tile) {
-            return `No tile provided to move to.`;
-        }
-        if (!this.isBlobmaster) {
-            return `Only the Blobmaster can drop() blobs.`;
-        }
-        if (player.slime < this.game.blobCost) {
-            return `You do not have enough slime to drop a blob`;
-        }
-        if (tile.dropOwner) {
-            return `A blob is already being dropped onto ${tile}`;
-        }
-        if (this.dropsLeft <= 0) {
-            return `${this} does not have any drops left this turn.`;
-        }
-
-        // <<-- /Creer-Merge: invalidate-drop -->>
-    }
-
-    /**
-     * Spawns a Blob in the air above the given tile.
-     *
-     * @param player - The player that called this.
-     * @param tile - The Tile to spawn a Blob on.
-     * @returns True if the drop worked, false otherwise.
-     */
-    protected async drop(player: Player, tile: Tile): Promise<boolean> {
-        // <<-- Creer-Merge: drop -->>
-
-        // Add logic here for drop.
-
-        tile.dropOwner = player;
-        if (this.tile === undefined) {
-            logger.warn("Blobmaster's tile was undefined!");
-            return false;
-        }
-        const xd = Math.abs(tile.x - this.tile.x);
-        const yd = Math.abs(tile.y - this.tile.y);
-        tile.dropTurnsLeft = Math.ceil((xd + yd) * this.game.perTileDropDelay);
-        player.slime -= this.game.blobCost;
-        player.drops.push(tile);
-        this.dropsLeft -= 1;
-        return true;
-
-        // <<-- /Creer-Merge: drop -->>
-    }
-
-    /**
-     * Invalidation function for harden. Try to find a reason why the passed in
-     * parameters are invalid, and return a human readable string telling them
-     * why it is invalid.
-     *
-     * @param player - The player that called this.
-     * @returns If the arguments are invalid, return a string explaining to
-     * human players why it is invalid. If it is valid return nothing, or an
-     * object with new arguments to use in the actual function.
-     */
-    protected invalidateHarden(
-        player: Player,
-    ): void | string | IBlobHardenArgs {
-        // <<-- Creer-Merge: invalidate-harden -->>
-
-        // Check all the arguments for harden here and try to
-        // return a string explaining why the input is wrong.
-        // If you need to change an argument for the real function, then
-        // changing its value in this scope is enough.
-
-        const reason = this.invalidate(player);
-        if (reason) {
-            return reason;
-        }
-        if (this.isBlobmaster) {
-            return `The Blobmaster cannot harden()`;
-        }
-
-        // <<-- /Creer-Merge: invalidate-harden -->>
-    }
-
-    /**
-     * Initiates the process of hardening this blob into a wall.
-     *
-     * @param player - The player that called this.
-     * @returns True if the harden worked, false otherwise.
-     */
-    protected async harden(player: Player): Promise<boolean> {
-        // <<-- Creer-Merge: harden -->>
-
-        // Add logic here for harden.
-
-        this.turnsTillHardened = this.game.hardenTime;
-        return true;
-
-        // <<-- /Creer-Merge: harden -->>
-    }
 
     /**
      * Invalidation function for move. Try to find a reason why the passed in
@@ -392,7 +262,7 @@ export class Blob extends GameObject {
 
         const direction = this.getMoveDirection(tile);
         if (!direction) {
-            return `${tile} is not adjacent to ${this} on ${this.tile}.`;
+            return `${tile} is not adjacent to ${this} on ${this.tile} with size ${this.size}.`;
         }
         // Remove this blob from the map temporarily.
         for (const blobTile of this.tiles) {
@@ -470,9 +340,6 @@ export class Blob extends GameObject {
         }
         if (this.isDead) {
             return `${this} is dead.`;
-        }
-        if (this.turnsTillHardened >= 0) {
-            return `${this} is in the process of hardening.`;
         }
         return undefined;
     }

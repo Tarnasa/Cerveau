@@ -28,19 +28,17 @@ export class BlobmasterGameSettingsManager extends BaseClasses.GameSettings {
                 default: 1,
                 // <<-- /Creer-Merge: bigBlobSpeed -->>
             },
-            blobCost: {
-                description: "How much slime it costs to spawn a blob.",
-                // <<-- Creer-Merge: blobCost -->>
-                default: 50,
-                // <<-- /Creer-Merge: blobCost -->>
+            blobCostExponent: {
+                description: "The E in the blob cost formula Mx**E.",
+                // <<-- Creer-Merge: blobCostExponent -->>
+                default: 2,
+                // <<-- /Creer-Merge: blobCostExponent -->>
             },
-            blobUpkeep: {
-                description: "Every blob costs its owner this amount of slime "
-                           + "every turn.",
-                // <<-- Creer-Merge: blobUpkeep -->>
-                default: 10,  // This is related to the maximum number of maintainable blobs
-                // Size (512) / blobUpKeep (10) == maximum 51 blobs
-                // <<-- /Creer-Merge: blobUpkeep -->>
+            blobCostMultiplier: {
+                description: "The M in the blob cost formula Mx**E.",
+                // <<-- Creer-Merge: blobCostMultiplier -->>
+                default: 7,
+                // <<-- /Creer-Merge: blobCostMultiplier -->>
             },
             bonusSlimeForFewerBlobs: {
                 description: "The player with fewer blobs is given this much "
@@ -50,8 +48,8 @@ export class BlobmasterGameSettingsManager extends BaseClasses.GameSettings {
                 // <<-- /Creer-Merge: bonusSlimeForFewerBlobs -->>
             },
             deathSlime: {
-                description: "The amount of slime added to a blob or wall's "
-                           + "tiles when it dies.",
+                description: "The amount of slime added to a blob's tiles when "
+                           + "it dies.",
                 // <<-- Creer-Merge: deathSlime -->>
                 default: 10,  // Make sure that grow+kill is not *always* better than scrounging
                 // size**2(9)*deathSlime(10) - blobCost(50)*size+1/2(2) = 90 - 100 = -10
@@ -59,24 +57,9 @@ export class BlobmasterGameSettingsManager extends BaseClasses.GameSettings {
                 // size**2(49)*deathSlime(10) - blobCost(50)*size+1/2(4) = 490 - 200 = 290 over 4 turns with 6 blobs
                 // <<-- /Creer-Merge: deathSlime -->>
             },
-            hardenReward: {
-                description: "The amount of slime given back to a blob's owner "
-                           + "when it turns into a wall.",
-                // <<-- Creer-Merge: hardenReward -->>
-                default: 50,  // This should probably make up for the upkeep cost of hardening
-                // hardenTime(4) * upKeep(10) = 40
-                // <<-- /Creer-Merge: hardenReward -->>
-            },
-            hardenTime: {
-                description: "The number of turns it takes a blob to harden "
-                           + "into a wall.",
-                // <<-- Creer-Merge: hardenTime -->>
-                default: 4,
-                // <<-- /Creer-Merge: hardenTime -->>
-            },
             maxDropsPerTurn: {
-                description: "A Blobmaster can drop at most this many blobs "
-                           + "per turn.",
+                description: "A Player can drop at most this many blobs per "
+                           + "turn.",
                 // <<-- Creer-Merge: maxDropsPerTurn -->>
                 default: 1,
                 // <<-- /Creer-Merge: maxDropsPerTurn -->>
@@ -85,11 +68,7 @@ export class BlobmasterGameSettingsManager extends BaseClasses.GameSettings {
                 description: "The maximum amount of slime a player can hold at "
                            + "any one time.",
                 // <<-- Creer-Merge: maxPlayerSlime -->>
-                default: 1000,
-                // Make sure a player can't win instantly
-                // tilesCoveredToWin (256) / (blobSize**2)(9) * (blobCost(50)*blobSize(3)) = 4266
-                // tilesCoveredToWin (256) / (blobSize**2)(25) * (blobCost(50)*blobSize(5)) = 2560
-                // tilesCoveredToWin (256) / (blobSize**2)(49) * (blobCost(50)*blobSize(7)) = 1828
+                default: 99999,
                 // <<-- /Creer-Merge: maxPlayerSlime -->>
             },
             maxSlimeSpawnedOnTile: {
@@ -104,15 +83,15 @@ export class BlobmasterGameSettingsManager extends BaseClasses.GameSettings {
                 // <<-- /Creer-Merge: maxSlimeSpawnedOnTile -->>
             },
             maxStartingWalls: {
-                description: "The maximum number of walls spawned at the start "
-                           + "of the match.",
+                description: "The maximum number of neutral blobs spawned at "
+                           + "the start of the match.",
                 // <<-- Creer-Merge: maxStartingWalls -->>
                 default: 24,
                 // <<-- /Creer-Merge: maxStartingWalls -->>
             },
             minStartingWalls: {
-                description: "The minimum number of walls spawned at the start "
-                           + "of the match.",
+                description: "The minimum number of neutral blobs spawned at "
+                           + "the start of the match.",
                 // <<-- Creer-Merge: minStartingWalls -->>
                 default: 8,
                 // <<-- /Creer-Merge: minStartingWalls -->>
@@ -149,25 +128,19 @@ export class BlobmasterGameSettingsManager extends BaseClasses.GameSettings {
                 description: "A player wins if they can cover this many tiles "
                            + "with their blobs on a single turn.",
                 // <<-- Creer-Merge: tilesCoveredToWin -->>
-                default: 256,  // 32 * 16 = 512
+                default: 171,  // 32 * 16 = 512 / 3 = 170.666
                 // <<-- /Creer-Merge: tilesCoveredToWin -->>
-            },
-            wallLifespan: {
-                description: "The number of turns a hardened blob wall lasts.",
-                // <<-- Creer-Merge: wallLifespan -->>
-                default: 25,
-                // <<-- /Creer-Merge: wallLifespan -->>
             },
             // <<-- Creer-Merge: schema -->>
 
-        // you can add more settings here, e.g.:
-        /*
-        someVariableLikeUnitHealth: {
-            description: "Describe what this setting does for the players.",
-            default: 1337,
-            min: 1,
-        },
-        */
+            // you can add more settings here, e.g.:
+            /*
+            someVariableLikeUnitHealth: {
+                description: "Describe what this setting does for the players.",
+                default: 1337,
+                min: 1,
+            },
+            */
 
             // <<-- /Creer-Merge: schema -->>
 

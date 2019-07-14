@@ -74,11 +74,6 @@ export const BaseClasses = {
 /** All the possible properties for an Blob. */
 export interface IBlobProperties {
     /**
-     * How many more Blobs this Blobmaster can spawn this turn.
-     */
-    dropsLeft?: number;
-
-    /**
      * Whether this Blob is a Blobmaster.
      */
     isBlobmaster?: boolean;
@@ -95,7 +90,7 @@ export interface IBlobProperties {
 
     /**
      * The Player that owns and can control this Blob, or undefined if this is
-     * a wall.
+     * a neutral blob.
      */
     owner?: Player;
 
@@ -109,36 +104,6 @@ export interface IBlobProperties {
      */
     tile?: Tile;
 
-    /**
-     * How many more turns till this wall disappears, or negative.
-     */
-    turnsTillDead?: number;
-
-    /**
-     * How many more turns till this blob becomes a wall, or negative.
-     */
-    turnsTillHardened?: number;
-
-}
-
-/**
- * Argument overrides for Blob's drop function. If you return an object of this
- * interface from the invalidate functions, the value(s) you set will be used
- * in the actual function.
- */
-export interface IBlobDropArgs {
-    /**
-     * The Tile to spawn a Blob on.
-     */
-    tile?: Tile;
-}
-
-/**
- * Argument overrides for Blob's harden function. If you return an object of
- * this interface from the invalidate functions, the value(s) you set will be
- * used in the actual function.
- */
-export interface IBlobHardenArgs {
 }
 
 /**
@@ -180,6 +145,11 @@ export interface IPlayerProperties {
      * which simultaneous drops are handled.
      */
     drops?: Tile[];
+
+    /**
+     * How many more Blobs this Player can drop this turn.
+     */
+    dropsLeft?: number;
 
     /**
      * If the player lost the game or not.
@@ -226,6 +196,18 @@ export interface IPlayerProperties {
      */
     won?: boolean;
 
+}
+
+/**
+ * Argument overrides for Player's drop function. If you return an object of
+ * this interface from the invalidate functions, the value(s) you set will be
+ * used in the actual function.
+ */
+export interface IPlayerDropArgs {
+    /**
+     * The Tile to spawn a Blob on.
+     */
+    tile?: Tile;
 }
 
 /** All the possible properties for an Tile. */
@@ -381,11 +363,11 @@ export const Namespace = makeNamespace({
                 bigBlobSpeed: {
                     typeName: "int",
                 },
-                blobCost: {
-                    typeName: "int",
+                blobCostExponent: {
+                    typeName: "float",
                 },
-                blobUpkeep: {
-                    typeName: "int",
+                blobCostMultiplier: {
+                    typeName: "float",
                 },
                 blobmasters: {
                     typeName: "list",
@@ -427,12 +409,6 @@ export const Namespace = makeNamespace({
                         gameObjectClass: GameObject,
                         nullable: false,
                     },
-                },
-                hardenReward: {
-                    typeName: "int",
-                },
-                hardenTime: {
-                    typeName: "int",
                 },
                 mapHeight: {
                     typeName: "int",
@@ -495,9 +471,6 @@ export const Namespace = makeNamespace({
                 timeAddedPerTurn: {
                     typeName: "int",
                 },
-                wallLifespan: {
-                    typeName: "int",
-                },
             },
             functions: {
             },
@@ -505,9 +478,6 @@ export const Namespace = makeNamespace({
         Blob: {
             parentClassName: "GameObject",
             attributes: {
-                dropsLeft: {
-                    typeName: "int",
-                },
                 isBlobmaster: {
                     typeName: "boolean",
                 },
@@ -530,36 +500,8 @@ export const Namespace = makeNamespace({
                     gameObjectClass: Tile,
                     nullable: true,
                 },
-                turnsTillDead: {
-                    typeName: "int",
-                },
-                turnsTillHardened: {
-                    typeName: "int",
-                },
             },
             functions: {
-                drop: {
-                    args: [
-                        {
-                            argName: "tile",
-                            typeName: "gameObject",
-                            gameObjectClass: Tile,
-                            nullable: false,
-                        },
-                    ],
-                    invalidValue: false,
-                    returns: {
-                        typeName: "boolean",
-                    },
-                },
-                harden: {
-                    args: [
-                    ],
-                    invalidValue: false,
-                    returns: {
-                        typeName: "boolean",
-                    },
-                },
                 move: {
                     args: [
                         {
@@ -632,6 +574,9 @@ export const Namespace = makeNamespace({
                         nullable: false,
                     },
                 },
+                dropsLeft: {
+                    typeName: "int",
+                },
                 lost: {
                     typeName: "boolean",
                 },
@@ -663,6 +608,20 @@ export const Namespace = makeNamespace({
                 },
             },
             functions: {
+                drop: {
+                    args: [
+                        {
+                            argName: "tile",
+                            typeName: "gameObject",
+                            gameObjectClass: Tile,
+                            nullable: false,
+                        },
+                    ],
+                    invalidValue: false,
+                    returns: {
+                        typeName: "boolean",
+                    },
+                },
             },
         },
         Tile: {

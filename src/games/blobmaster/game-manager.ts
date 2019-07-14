@@ -68,16 +68,11 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
 
         // <<-- Creer-Merge: after-turn -->>
         // add logic here after the current player's turn ends
-        for (const blob of this.game.blobs) {
-            blob.handleHardenAndWallDeath();
-        }
         this.giveHandicapSlime();
         for (const player of this.game.players) {
             player.clampSlime();
-            player.takeAwayBlobUpkeep(); // Newly captured don't cost upkeep
-            player.clampSlime();
         }
-        this.game.currentPlayer.handleDrops();
+        this.game.currentPlayer.handleDrops(); // The order of using currentplayer first here matters
         this.game.currentPlayer.opponent.handleDrops();
         this.removeDroppedBlobsFromPlayerDropList();
         for (const tile of this.game.tiles) {
@@ -89,6 +84,7 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
         this.removeDeadBlobs();
         for (const player of this.game.players) {
             player.updateScore();
+            player.dropsLeft = this.game.maxDropsPerTurn;
         }
         // <<-- /Creer-Merge: after-turn -->>
     }
@@ -117,7 +113,7 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
         } else if (scoreWinner === 2 && tilesWinner === 2) {
             // Ummmmmmm
             this.secondaryWinConditions(
-                `Both players reached max score, and covered enoough tiles in a single turn to win`);
+                `Both players reached max score, and covered enough tiles in a single turn to win`);
             return true;
         }
         // <<-- /Creer-Merge: primary-win-conditions -->>
@@ -136,27 +132,35 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
         // Add logic here for the secondary win conditions
         const p1 = this.game.players[0];
         const p2 = this.game.players[1];
+        let covered1 = 0;
+        let covered2 = 0;
+        for (const blob of this.game.players[0].blobs) {
+            covered1 += blob.size * blob.size;
+        }
+        for (const blob of this.game.players[1].blobs) {
+            covered2 += blob.size * blob.size;
+        }
         if (p1.score > p2.score) {
             this.declareWinnerAndLoser(
                 `Has higher score (${p1.score} vs ${p2.score}) at the end of ${this.game.maxTurns} turns`, p1);
         } else if (p2.score > p1.score) {
             this.declareWinnerAndLoser(
                 `Has higher score (${p2.score} vs ${p1.score}) at the end of ${this.game.maxTurns} turns`, p2);
-        } else if (p1.blobs.length > p2.blobs.length) {
+        } else if (covered1 > covered2) {
             this.declareWinnerAndLoser(
-                `Has equal score (${p1.score}), but more blobs (${p1.blobs.length} vs ` +
-                `${p2.blobs.length}) at the end of ${this.game.maxTurns} turns`, p1);
-        } else if (p2.blobs.length > p1.blobs.length) {
+                `Has equal score (${p1.score}), but more tiles (${covered1} vs ` +
+                `${covered2}) at the end of ${this.game.maxTurns} turns`, p1);
+        } else if (covered2 > covered1) {
             this.declareWinnerAndLoser(
-                `Has equal score (${p2.score}), but more blobs (${p2.blobs.length} vs ` +
-                `${p1.blobs.length}) at the end of ${this.game.maxTurns} turns`, p2);
+                `Has equal score (${p2.score}), but more tiles (${covered2} vs ` +
+                `${covered1}) at the end of ${this.game.maxTurns} turns`, p2);
         } else if (p1.slime > p2.slime) {
             this.declareWinnerAndLoser(
-                `Has equal score (${p1.score}), equal blobs (${p1.blobs.length}, but ` +
+                `Has equal score (${p1.score}), equal tiles (${covered1}, but ` +
                 `more slime (${p1.slime} vs ${p2.slime}) at the end of ${this.game.maxTurns} turns`, p1);
         } else if (p2.slime > p1.slime) {
             this.declareWinnerAndLoser(
-                `Has equal score (${p2.score}), equal blobs (${p2.blobs.length}, but ` +
+                `Has equal score (${p2.score}), equal tiles (${covered2}, but ` +
                 `more slime (${p2.slime} vs ${p1.slime}) at the end of ${this.game.maxTurns} turns`, p2);
         }
         // <<-- /Creer-Merge: secondary-win-conditions -->>
@@ -223,8 +227,8 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
         for (const blob of this.game.players[1].blobs) {
             covered2 += blob.size * blob.size;
         }
-        const win1 = covered1 === this.game.tilesCoveredToWin;
-        const win2 = covered2 === this.game.tilesCoveredToWin;
+        const win1 = covered1 >= this.game.tilesCoveredToWin;
+        const win2 = covered2 >= this.game.tilesCoveredToWin;
         if (win1 && !win2) {
             return 0;
         } else if (win2 && !win1) {
