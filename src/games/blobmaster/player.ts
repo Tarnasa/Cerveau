@@ -3,7 +3,6 @@ import { IBaseBlobmasterPlayer, IPlayerDropArgs } from "./";
 import { AI } from "./ai";
 import { Blob } from "./blob";
 import { GameObject } from "./game-object";
-import { Player } from "./player";
 import { Tile } from "./tile";
 
 // <<-- Creer-Merge: imports -->>
