@@ -104,22 +104,25 @@ export class Tile extends GameObject implements BaseTile {
     public handleDrops(): void {
         if (this.dropOwner) {
             if (this.dropTurnsLeft === 0) {
-                let createNew = true;
+                let createNew = false;
                 if (this.blob) {
                     if (this.blob.isBlobmaster && this.blob.owner !== undefined) {
                         this.blob.owner.slime = Math.ceil(this.blob.owner.slime / 2.0);
                         for (const blob of this.blob.owner.blobs) {
-                            blob.resize(1);
+                            if (blob.size > 1) {
+                                blob.resize(blob.size - 2);
+                            }
                         }
-                        createNew = false;
                     } else if (this.dropOwner !== this.blob.owner) {
                         this.blob.applyDamage(1);
+                        createNew = true;
                     } else if (this.blob.canResize(this.blob.size + 2)) {
                         this.blob.resize(this.blob.size + 2);
-                        createNew = false;
                     } else {
-                        this.blob.applyDamage(1);
+                        // If we can't resize, don't do anything
                     }
+                } else {
+                    createNew = true;
                 }
                 if (createNew) {
                     const newBlob = this.game.manager.create.blob({
