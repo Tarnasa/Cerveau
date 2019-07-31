@@ -226,7 +226,7 @@ export class BlobmasterGame extends BaseClasses.Game {
 
     private spawnBlobmasters(): void {
         const blobmaster1y = this.manager.random.int(0, this.mapHeight - 1);
-        const Blobmastery = this.mapHeight - blobmaster1y - 1;
+        const blobmaster2y = this.mapHeight - blobmaster1y - 1;
         const blobmaster1 = this.manager.create.blob({
             owner: this.players[0],
             tile: this.getTile(0, blobmaster1y) as Tile,
@@ -235,14 +235,14 @@ export class BlobmasterGame extends BaseClasses.Game {
         });
         this.players[0].blobmaster = blobmaster1;
         this.blobmasters.push(blobmaster1);
-        const Blobmaster = this.manager.create.blob({
+        const blobmaster2 = this.manager.create.blob({
             owner: this.players[1],
-            tile: this.getTile(this.mapWidth - 1, Blobmastery) as Tile,
+            tile: this.getTile(this.mapWidth - 1, blobmaster2y) as Tile,
             size: 1,
             isBlobmaster: true,
         });
-        this.players[1].blobmaster = Blobmaster;
-        this.blobmasters.push(Blobmaster);
+        this.players[1].blobmaster = blobmaster2;
+        this.blobmasters.push(blobmaster2);
     }
 
     private spawnWalls(): void {
@@ -272,9 +272,14 @@ export class BlobmasterGame extends BaseClasses.Game {
             });
             while (this.manager.random.int(0, 100) < 50) {
                 const newSize = wall.size + 2;
-                if (wall.canResize(newSize) && reflectedWall.canResize(newSize)) {
+                if (wall.canResize(newSize)) {
                     wall.resize(newSize);
-                    reflectedWall.resize(newSize);
+                    if (reflectedWall.canResize(newSize)) {
+                        reflectedWall.resize(newSize);
+                    } else {
+                        wall.resize(newSize - 2);
+                        break;
+                    }
                 } else {
                     break;
                 }
