@@ -72,7 +72,9 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
         for (const player of this.game.players) {
             player.clampSlime();
         }
-        this.game.currentPlayer.handleDrops(); // The order of using currentplayer first here matters
+        // The order of using currentplayer first here matters
+        // so that one player does not have a drop advantage over the other.
+        this.game.currentPlayer.handleDrops();
         this.game.currentPlayer.opponent.handleDrops();
         this.removeDroppedBlobsFromPlayerDropList();
         for (const tile of this.game.tiles) {
@@ -173,12 +175,18 @@ export class BlobmasterGameManager extends BaseClasses.GameManager {
     // <<-- Creer-Merge: protected-private-methods -->>
 
     private giveHandicapSlime(): void {
-        const p1Blobs = this.game.players[0].blobs.length;
-        const p2Blobs = this.game.players[1].blobs.length;
-        if (p1Blobs < p2Blobs) {
-            this.game.players[0].slime += (p2Blobs - p1Blobs) * this.game.bonusSlimeForFewerBlobs;
-        } else if (p2Blobs < p1Blobs) {
-            this.game.players[1].slime += (p1Blobs - p2Blobs) * this.game.bonusSlimeForFewerBlobs;
+        let covered1 = 0;
+        let covered2 = 0;
+        for (const blob of this.game.players[0].blobs) {
+            covered1 += blob.size * blob.size;
+        }
+        for (const blob of this.game.players[1].blobs) {
+            covered2 += blob.size * blob.size;
+        }
+        if (covered1 < covered2) {
+            this.game.players[0].slime += (covered2 - covered1) * this.game.bonusSlimeForFewerBlobs;
+        } else if (covered2 < covered1) {
+            this.game.players[1].slime += (covered1 - covered2) * this.game.bonusSlimeForFewerBlobs;
         }
     }
 
