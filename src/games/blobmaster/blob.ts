@@ -137,7 +137,7 @@ export class Blob extends GameObject {
                     return false;
                 } else if (occupiedTile.blob && occupiedTile.blob !== this) {
                     const blob = occupiedTile.blob;
-                    if (blob.isBlobmaster || blob.owner !== this.owner) {
+                    if (blob.isBlobmaster || blob.owner !== this.owner || this.owner === undefined) {
                         return false;
                     }
                 }
