@@ -91,17 +91,17 @@ export class GalapagosGameManager extends BaseClasses.GameManager {
         const extinctWinner = this.checkExtinct();
         if (extinctWinner === 0 || extinctWinner === 1) {
             this.declareWinner(
-                "survived, opponent went extinct.",
+                `survived, opponent went extinct after turn ${this.game.currentTurn}.`,
                 this.game.players[extinctWinner],
             );
             this.declareLoser(
-                "went extinct.",
+                `went extinct after turn ${this.game.currentTurn}.`,
                 this.game.players[extinctWinner].opponent,
             );
             return true;
         } else if (extinctWinner === 2) {
             this.secondaryWinConditions(
-                "Both players went extinct on the same turn.",
+                `Both players went extinct at the end of turn ${this.game.currentTurn}.`,
             );
             return true;
         }
