@@ -138,17 +138,7 @@ export class GalapagosGameManager extends BaseClasses.GameManager {
         for (const creature of this.game.players[1].creatures) {
             health2 += creature.currentHealth;
         }
-        if (creatures1 > creatures2) {
-            this.declareWinnerAndLoser(
-                `has more creatures at the end of ${maxTurns} turns.`,
-                this.game.players[0],
-            );
-        } else if (creatures2 > creatures1) {
-            this.declareWinnerAndLoser(
-                `has more creatures at the end of ${maxTurns} turns.`,
-                this.game.players[1],
-            );
-        } else if (health1 > health2) {
+        if (health1 > health2) {
             this.declareWinnerAndLoser(
                 `has more combined health at the end of ${maxTurns} turns.`,
                 this.game.players[0],
@@ -156,6 +146,17 @@ export class GalapagosGameManager extends BaseClasses.GameManager {
         } else if (health2 > health1) {
             this.declareWinnerAndLoser(
                 `has more combined health at the end of ${maxTurns} turns.`,
+                this.game.players[1],
+            );
+        }
+        } else if (creatures1 > creatures2) {
+            this.declareWinnerAndLoser(
+                `has more creatures at the end of ${maxTurns} turns.`,
+                this.game.players[0],
+            );
+        } else if (creatures2 > creatures1) {
+            this.declareWinnerAndLoser(
+                `has more creatures at the end of ${maxTurns} turns.`,
                 this.game.players[1],
             );
         }
