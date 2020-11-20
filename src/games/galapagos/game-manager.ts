@@ -148,7 +148,6 @@ export class GalapagosGameManager extends BaseClasses.GameManager {
                 `has more combined health at the end of ${maxTurns} turns.`,
                 this.game.players[1],
             );
-        }
         } else if (creatures1 > creatures2) {
             this.declareWinnerAndLoser(
                 `has more creatures at the end of ${maxTurns} turns.`,
