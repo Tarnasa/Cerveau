@@ -57,7 +57,8 @@ export class GalapagosGame extends BaseClasses.Game {
     public gameObjects!: { [id: string]: GameObject };
 
     /**
-     * The amount of health required from -each- creature in order to breed.
+     * The amount of extra health from both breeding creatures required if you
+     * have more total health than your opponent.
      */
     public readonly healthPerBreed!: number;
 

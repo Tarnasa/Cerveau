@@ -52,6 +52,12 @@ export class GalapagosGameManager extends BaseClasses.GameManager {
         for (const creature of this.game.creatures) {
             creature.resetMoves();
         }
+        for (const player of this.game.players) {
+            player.totalHealth = 0;
+            for (const creature of player.creatures) {
+                player.totalHealth += creature.currentHealth;
+            }
+        }
         // <<-- /Creer-Merge: before-turn -->>
     }
 

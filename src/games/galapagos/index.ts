@@ -168,7 +168,7 @@ export interface CreatureProperties {
  */
 export interface CreatureBiteArgs {
     /**
-     * The Tile with a creature or plant to bite.
+     * The Tile with a plant or creature to bite.
      */
     tile?: Tile;
 }
@@ -265,6 +265,12 @@ export interface PlayerProperties {
      * The amount of time (in ns) remaining for this AI to send commands.
      */
     timeRemaining?: number;
+
+    /**
+     * The combined health of all creatures this player had at the beginning of
+     * this turn.
+     */
+    totalHealth?: number;
 
     /**
      * If the player won the game or not.
@@ -760,6 +766,9 @@ export const Namespace = makeNamespace({
                 timeRemaining: {
                     typeName: "float",
                 },
+                totalHealth: {
+                    typeName: "int",
+                },
                 won: {
                     typeName: "boolean",
                 },
@@ -815,5 +824,5 @@ export const Namespace = makeNamespace({
         },
     },
     gameVersion:
-        "9de7bfcac0ec86d090bbe383036fff75b54a7ace6426f7f0cc10a4827893e91f",
+        "9337bc3d0f54640d13df30becf2e1bbda2e85a7be44fea6b072e638afc7e8dd7",
 });

@@ -57,6 +57,12 @@ export class Player extends GameObject implements BaseGalapagosPlayer {
     public timeRemaining!: number;
 
     /**
+     * The combined health of all creatures this player had at the beginning of
+     * this turn.
+     */
+    public totalHealth!: number;
+
+    /**
      * If the player won the game or not.
      */
     public won!: boolean;

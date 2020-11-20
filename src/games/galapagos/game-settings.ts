@@ -44,10 +44,11 @@ export class GalapagosGameSettingsManager extends BaseClasses.GameSettings {
 
             healthPerBreed: {
                 description:
-                    "The amount of health required from -each- creature in " +
-                    "order to breed.",
+                    "The amount of extra health from both breeding " +
+                    "creatures required if you have more total health than " +
+                    "your opponent.",
                 // <<-- Creer-Merge: healthPerBreed -->>
-                default: 55,
+                default: 5,
                 // <<-- /Creer-Merge: healthPerBreed -->>
             },
 

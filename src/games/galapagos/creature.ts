@@ -198,7 +198,7 @@ export class Creature extends GameObject {
      * why it is invalid.
      *
      * @param player - The player that called this.
-     * @param tile - The Tile with a creature or plant to bite.
+     * @param tile - The Tile with a plant or creature to bite.
      * @returns If the arguments are invalid, return a string explaining to
      * human players why it is invalid. If it is valid return nothing, or an
      * object with new arguments to use in the actual function.
@@ -243,10 +243,10 @@ export class Creature extends GameObject {
     }
 
     /**
-     * Command a creature to bite a plant or creature on a specified tile.
+     * Command a creature to bite a plant or creature on the specified tile.
      *
      * @param player - The player that called this.
-     * @param tile - The Tile with a creature or plant to bite.
+     * @param tile - The Tile with a plant or creature to bite.
      * @returns True if successfully bit, false otherwise.
      */
     protected async bite(player: Player, tile: Tile): Promise<boolean> {
@@ -338,6 +338,20 @@ export class Creature extends GameObject {
         if (this.tile.getNeighbors().indexOf(mate.tile) === -1) {
             return `Creature ${this.id} cannot breed() with mate ${mate.id} on ${mate.tile} because it is not adjacent to ${this.tile}.`;
         }
+        if (this.currentHealth < this.healthToBreed()) {
+            return `Creature ${
+                this.id
+            } cannot breed() because it does not have enough health (${
+                this.currentHealth
+            } vs. ${this.healthToBreed()}.`;
+        }
+        if (this.currentHealth < mate.healthToBreed()) {
+            return `Creature ${this.id} cannot breed() with ${
+                mate.id
+            } because its mate does not have enough health (${
+                mate.currentHealth
+            } vs. ${mate.healthToBreed()}.`;
+        }
 
         return undefined; // means nothing could be found that was ivalid.
 
@@ -426,8 +440,8 @@ export class Creature extends GameObject {
         mate.canBite = false;
         this.movementLeft = 0;
         mate.movementLeft = 0;
-        this.applyDamage(this.maxHealth / 2);
-        mate.applyDamage(mate.maxHealth / 2);
+        this.applyDamage(this.healthToBreed());
+        mate.applyDamage(mate.healthToBreed());
         return newCreature;
 
         // <<-- /Creer-Merge: breed -->>
@@ -524,6 +538,17 @@ export class Creature extends GameObject {
     // <<-- Creer-Merge: protected-private-functions -->>
 
     // Any additional protected or pirate methods can go here.
+
+    private healthToBreed(): number {
+        let cost = this.maxHealth / 2;
+        if (
+            this.owner &&
+            this.owner.totalHealth > this.owner.opponent.totalHealth
+        ) {
+            cost += this.game.healthPerBreed;
+        }
+        return cost;
+    }
 
     private invalidate(player: Player): string | undefined {
         if (player !== this.game.currentPlayer) {
